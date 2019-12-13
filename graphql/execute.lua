@@ -78,7 +78,7 @@ local function mergeSelectionSets(fields)
   return selections
 end
 
-local function defaultResolver(object, arguments, info)
+local function defaultResolver(object, _, info)
   return object[info.fieldASTs[1].name.value]
 end
 
@@ -190,13 +190,12 @@ local function completeValue(fieldType, result, subSelections, context)
     return evaluateSelections(objectType, result, subSelections, context)
   end
 
-  error('Unknown type "' .. fieldTypeName .. '" for field "' .. field.name .. '"')
+  error('Unknown type "' .. fieldTypeName .. '"')
 end
 
 local function getFieldEntry(objectType, object, fields, context)
   local firstField = fields[1]
   local fieldName = firstField.name.value
-  local responseKey = getFieldResponseKey(firstField)
   local fieldType = introspection.fieldMap[fieldName] or objectType.fields[fieldName]
 
   if fieldType == nil then

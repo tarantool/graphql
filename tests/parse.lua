@@ -1,5 +1,8 @@
+local l = require(debug.sourcedir()..'.lust')
+local describe, expect, test = l.describe, l.expect, l.test
+
 describe('parse', function()
-  local parse = require 'graphql.parse'
+  local parse = require('graphql.parse')
 
   test('comments', function()
     local document
@@ -76,19 +79,19 @@ describe('parse', function()
     end)
 
     test('directives', function()
-      local operation = parse('query{}').definitions[1]
+      operation = parse('query{}').definitions[1]
       expect(operation.directives).to_not.exist()
 
-      local operation = parse('query @a{}').definitions[1]
+      operation = parse('query @a{}').definitions[1]
       expect(#operation.directives).to.exist()
 
-      local operation = parse('query name @a{}').definitions[1]
+      operation = parse('query name @a{}').definitions[1]
       expect(#operation.directives).to.exist()
 
-      local operation = parse('query ($a:Int) @a {}').definitions[1]
+      operation = parse('query ($a:Int) @a {}').definitions[1]
       expect(#operation.directives).to.exist()
 
-      local operation = parse('query name ($a:Int) @a {}').definitions[1]
+      operation = parse('query name ($a:Int) @a {}').definitions[1]
       expect(#operation.directives).to.exist()
     end)
   end)
@@ -371,7 +374,7 @@ describe('parse', function()
     local value
 
     local function run(input, result, type)
-      local value = parse('{x(y:' .. input .. ')}').definitions[1].selectionSet.selections[1].arguments[1].value
+      value = parse('{x(y:' .. input .. ')}').definitions[1].selectionSet.selections[1].arguments[1].value
       if type then expect(value.kind).to.equal(type) end
       if result then expect(value.value).to.equal(result) end
       return value

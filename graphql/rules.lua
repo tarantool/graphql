@@ -1,7 +1,6 @@
 local path = (...):gsub('%.[^%.]+$', '')
 local types = require(path .. '.types')
 local util = require(path .. '.util')
-local schema = require(path .. '.schema')
 local introspection = require(path .. '.introspection')
 
 local function getParentField(context, name, count)
@@ -159,15 +158,17 @@ function rules.unambiguousSelections(node, context)
 
         validateField(key, fieldEntry)
       elseif selection.kind == 'inlineFragment' then
-        local parentType = selection.typeCondition and context.schema:getType(selection.typeCondition.name.value) or parentType
-        validateSelectionSet(selection.selectionSet, parentType)
+        local _parentType = selection.typeCondition
+          and context.schema:getType(selection.typeCondition.name.value)
+          or parentType
+        validateSelectionSet(selection.selectionSet, _parentType)
       elseif selection.kind == 'fragmentSpread' then
         local fragmentDefinition = context.fragmentMap[selection.name.value]
         if fragmentDefinition and not seen[fragmentDefinition] then
           seen[fragmentDefinition] = true
           if fragmentDefinition and fragmentDefinition.typeCondition then
-            local parentType = context.schema:getType(fragmentDefinition.typeCondition.name.value)
-            validateSelectionSet(fragmentDefinition.selectionSet, parentType)
+            local _parentType = context.schema:getType(fragmentDefinition.typeCondition.name.value)
+            validateSelectionSet(fragmentDefinition.selectionSet, _parentType)
           end
         end
       end
@@ -177,7 +178,7 @@ function rules.unambiguousSelections(node, context)
   validateSelectionSet(node, context.objects[#context.objects])
 end
 
-function rules.uniqueArgumentNames(node, context)
+function rules.uniqueArgumentNames(node)
   if node.arguments then
     local arguments = {}
     for _, argument in ipairs(node.arguments) do
@@ -206,8 +207,8 @@ function rules.requiredArgumentsPresent(node, context)
   local parentField = getParentField(context, node.name.value)
   for name, argument in pairs(parentField.arguments) do
     if argument.__type == 'NonNull' then
-      local present = util.find(arguments, function(argument)
-        return argument.name.value == name
+      local present = util.find(arguments, function(arg)
+        return arg.name.value == name
       end)
 
       if not present then
@@ -217,7 +218,7 @@ function rules.requiredArgumentsPresent(node, context)
   end
 end
 
-function rules.uniqueFragmentNames(node, context)
+function rules.uniqueFragmentNames(node)
   local fragments = {}
   for _, definition in ipairs(node.definitions) do
     if definition.kind == 'fragmentDefinition' then
@@ -309,11 +310,11 @@ function rules.fragmentSpreadIsPossible(node, context)
     elseif kind.__type == 'Interface' then
       return context.schema:getImplementors(kind.name)
     elseif kind.__type == 'Union' then
-      local types = {}
+      local _types = {}
       for i = 1, #kind.types do
-        types[kind.types[i]] = kind.types[i]
+        _types[kind.types[i]] = kind.types[i]
       end
-      return types
+      return _types
     else
       return {}
     end
@@ -331,7 +332,7 @@ function rules.fragmentSpreadIsPossible(node, context)
   end
 end
 
-function rules.uniqueInputObjectFields(node, context)
+function rules.uniqueInputObjectFields(node)
   local function validateValue(value)
     if value.kind == 'listType' or value.kind == 'nonNullType' then
       return validateValue(value.type)
@@ -525,9 +526,9 @@ function rules.variableUsageAllowed(node, context)
               local implementors = context.schema:getImplementors(superType.name)
               return implementors and implementors[context.schema:getType(subType.name)]
             elseif superType.__type == 'Union' then
-              local types = superType.types
-              for i = 1, #types do
-                if types[i] == subType then
+              local _types = superType.types
+              for j = 1, #_types do
+                if _types[j] == subType then
                   return true
                 end
               end

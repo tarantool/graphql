@@ -1,5 +1,5 @@
-local types = require 'graphql.types'
-local schema = require 'graphql.schema'
+local types = require('graphql.types')
+local schema = require('graphql.schema')
 
 local dogCommand = types.enum({
   name = 'DogCommand',
@@ -96,7 +96,7 @@ local catOrDog = types.union({
   types = {cat, dog}
 })
 
-local dogOrHuman = types.union({
+types.union({
   name = 'DogOrHuman',
   types = {dog, human}
 })

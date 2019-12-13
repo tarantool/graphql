@@ -15,11 +15,11 @@ Example
 ---
 
 ```lua
-local parse = require 'graphql.parse'
-local schema = require 'graphql.schema'
-local types = require 'graphql.types'
-local validate = require 'graphql.validate'
-local execute = require 'graphql.execute'
+local parse = require('graphql.parse')
+local schema = require('graphql.schema')
+local types = require('graphql.types')
+local validate = require('graphql.validate')
+local execute = require('graphql.execute')
 
 -- Parse a query
 local ast = parse [[

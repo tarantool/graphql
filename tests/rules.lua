@@ -1,6 +1,9 @@
-local parse = require 'graphql.parse'
-local validate = require 'graphql.validate'
-local schema = require 'tests/data/schema'
+local parse = require('graphql.parse')
+local validate = require('graphql.validate')
+local schema = require('tests/data/schema')
+
+local l = require(debug.sourcedir()..'.lust')
+local describe, expect, it = l.describe, l.expect, l.it
 
 local function expectError(message, document)
   if not message then
@@ -11,8 +14,6 @@ local function expectError(message, document)
 end
 
 describe('rules', function()
-  local document
-
   describe('uniqueOperationNames', function()
     local message = 'Multiple operations exist named'
 
@@ -127,7 +128,7 @@ describe('rules', function()
 
   describe('compositeFieldsAreNotLeaves', function()
     local message = 'Composite types must have subselections'
-    
+
     it('fails if an object is a leaf', function()
       expectError(message, '{ dog }')
     end)

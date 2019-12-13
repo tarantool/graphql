@@ -79,7 +79,7 @@ local function isa(v, x)
 end
 
 local function has(t, x)
-  for k, v in pairs(t) do
+  for _, v in pairs(t) do
     if v == x then return true end
   end
   return false
@@ -110,7 +110,9 @@ local paths = {
   exist = {f = function(v) return v ~= nil, tostring(v) .. ' is nil' end},
   truthy = {f = function(v) return v, tostring(v) .. ' is not truthy' end},
   falsy = {f = function(v) return not v, tostring(v) .. ' is not falsy' end},
-  equal = {f = function(v, x) return strict_eq(v, x), tostring(v) .. ' and ' .. tostring(x) .. ' are not strictly equal' end},
+  equal = {f = function(v, x)
+    return strict_eq(v, x), tostring(v) .. ' and ' .. tostring(x) .. ' are not strictly equal'
+  end},
   have = {
     f = function(v, x)
       if type(v) ~= 'table' then return false, 'table "' .. tostring(v) .. '" is not a table' end
@@ -118,7 +120,9 @@ local paths = {
     end
   },
   fail = {'with', f = function(v) return not pcall(v), tostring(v) .. ' did not fail' end},
-  with = {f = function(v, x) local _, e = pcall(v) return e and e:find(x), tostring(v) .. ' did not fail with ' .. tostring(x) end}
+  with = {f = function(v, x)
+    local _, e = pcall(v) return e and e:find(x), tostring(v) .. ' did not fail with ' .. tostring(x)
+  end},
 }
 
 function lust.expect(v)

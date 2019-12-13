@@ -1,6 +1,6 @@
-local lpeg = require 'lulpeg'
+local lpeg = require('lulpeg')
 local P, R, S, V = lpeg.P, lpeg.R, lpeg.S, lpeg.V
-local C, Ct, Cmt, Cg, Cc, Cf, Cmt = lpeg.C, lpeg.Ct, lpeg.Cmt, lpeg.Cg, lpeg.Cc, lpeg.Cf, lpeg.Cmt
+local C, Ct, Cmt = lpeg.C, lpeg.Ct, lpeg.Cmt
 
 local line
 local lastLinePos
@@ -260,8 +260,22 @@ local graphQL = P {
   definition = _'operation' + _'fragmentDefinition',
 
   operationType = C(P'query' + P'mutation'),
-  operation = (_'operationType' * ws * maybe(name) * maybe('variableDefinitions') * maybe('directives') * _'selectionSet' + _'selectionSet') / cOperation,
-  fragmentDefinition = 'fragment' * ws * fragmentName * ws * _'typeCondition' * ws * _'selectionSet' / cFragmentDefinition,
+  operation = (_'operationType'
+    * ws
+    * maybe(name)
+    * maybe('variableDefinitions')
+    * maybe('directives')
+    * _'selectionSet'
+    + _'selectionSet')
+  / cOperation,
+  fragmentDefinition = ('fragment'
+    * ws
+    * fragmentName
+    * ws
+    * _'typeCondition'
+    * ws
+    * _'selectionSet')
+  / cFragmentDefinition,
 
   selectionSet = ws * '{' * ws * list('selection') * ws * '}' / cSelectionSet,
   selection = ws * (_'field' + _'fragmentSpread' + _'inlineFragment'),
@@ -277,10 +291,20 @@ local graphQL = P {
   directive = '@' * name * maybe('arguments') / cDirective,
   directives = ws * list('directive', 1) * ws,
 
-  variableDefinition = ws * variable * ws * ':' * ws * _'type' * (ws * '=' * _'value') ^ -1 * comma * ws / cVariableDefinition,
+  variableDefinition = (ws
+    * variable
+    * ws
+    * ':'
+    * ws
+    * _'type'
+    * (ws * '=' * _'value') ^ -1
+    * comma
+    * ws)
+  / cVariableDefinition,
   variableDefinitions = ws * '(' * list('variableDefinition', 1) * ')',
 
-  value = ws * (variable + _'objectValue' + _'listValue' + enumValue + stringValue + booleanValue + floatValue + intValue),
+  value = ws
+    * (variable + _'objectValue' + _'listValue' + enumValue + stringValue + booleanValue + floatValue + intValue),
   listValue = '[' * list('value') * ']' / cList,
   objectFieldValue = ws * C(rawName) * ws * ':' * ws * _'value' * comma / cObjectField,
   objectValue = '{' * ws * list('objectFieldValue') * ws * '}' / cObject,
@@ -293,11 +317,11 @@ local graphQL = P {
 
 -- TODO doesn't handle quotes that immediately follow escaped backslashes.
 local function stripComments(str)
-  return (str .. '\n'):gsub('(.-\n)', function(line)
+  return (str .. '\n'):gsub('(.-\n)', function(_line)
     local index = 1
-    while line:find('#', index) do
-      local pos = line:find('#', index) - 1
-      local chunk = line:sub(1, pos)
+    while _line:find('#', index) do
+      local pos = _line:find('#', index) - 1
+      local chunk = _line:sub(1, pos)
       local _, quotes = chunk:gsub('([^\\]")', '')
       if quotes % 2 == 0 then
         return chunk .. '\n'
@@ -306,7 +330,7 @@ local function stripComments(str)
       end
     end
 
-    return line
+    return _line
   end):sub(1, -2)
 end
 

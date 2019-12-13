@@ -45,6 +45,8 @@ function types.scalar(config)
   return instance
 end
 
+local initFields
+
 function types.object(config)
   assert(type(config.name) == 'string', 'type name must be provided as a string')
   if config.isTypeOf then
@@ -201,7 +203,10 @@ end
 
 types.int = types.scalar({
   name = 'Int',
-  description = "The `Int` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1. ", 
+  description = [[
+    The `Int` scalar type represents non-fractional signed whole numeric values.
+    Int can represent values between -(2^31) and 2^31 - 1.
+  ]],
   serialize = coerceInt,
   parseValue = coerceInt,
   parseLiteral = function(node)
@@ -224,7 +229,10 @@ types.float = types.scalar({
 
 types.string = types.scalar({
   name = 'String',
-  description = "The `String` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.",
+  description = [[
+    The `String` scalar type represents textual data, represented as UTF-8 character sequences.
+    The String type is most often used by GraphQL to represent free-form human-readable text.
+  ]],
   serialize = tostring,
   parseValue = tostring,
   parseLiteral = function(node)

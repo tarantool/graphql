@@ -1,8 +1,5 @@
-lust = require 'tests/lust'
-
-for _, fn in pairs({'describe', 'it', 'test', 'expect', 'spy', 'before', 'after'}) do
-  _G[fn] = lust[fn]
-end
+require('strict').on()
+local lust = require(debug.sourcedir()..'.lust')
 
 local files = {
   'parse',
