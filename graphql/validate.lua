@@ -17,6 +17,17 @@ local function getParentField(context, name, count)
 end
 
 local visitors = {
+  -- <document>
+  --
+  -- {
+  --   kind = 'document',
+  --   definitions = list of <definition>,
+  -- }
+  --
+  -- <definition> is one of the following:
+  --
+  -- * <operation>
+  -- * <fragmentDefinition>
   document = {
     enter = function(node, context)
       for _, definition in ipairs(node.definitions) do
@@ -33,6 +44,58 @@ local visitors = {
     rules = { rules.uniqueFragmentNames, exit = { rules.noUnusedFragments } },
   },
 
+  -- <operation>
+  --
+  -- {
+  --   kind = 'operation',
+  --   operation = 'query' or 'mutation',
+  --   name = {
+  --     kind = 'name',
+  --     value = '...',
+  --   } (optional),
+  --   selectionSet = <selectionSet>,
+  --   variableDefinitions = list of <variableDefinition> (optional),
+  --   directives = list of <directive> (optional),
+  -- }
+  --
+  -- <variableDefinition>
+  --
+  -- {
+  --   kind = 'variableDefinition',
+  --   variable = <variable>,
+  --   type = <type>,
+  --   defaultValue = <value> (optional),
+  -- }
+  --
+  -- <type> is one of the following:
+  --
+  -- * <namedType>
+  -- * <listType>
+  -- * <nonNullType>
+  --
+  -- <namedType>
+  --
+  -- {
+  --   kind = 'namedType',
+  --   name = {
+  --     kind = 'name',
+  --     value = '...',
+  --   },
+  -- }
+  --
+  -- <listType>
+  --
+  -- {
+  --   kind = 'listType',
+  --   type = <type>,
+  -- }
+  --
+  -- <nonNullType>
+  --
+  -- {
+  --   kind = 'nonNullType',
+  --   type = one of (<namedType>, <listType>),
+  -- }
   operation = {
     enter = function(node, context)
       table.insert(context.objects, context.schema[node.operation])
@@ -63,6 +126,18 @@ local visitors = {
     },
   },
 
+  -- <selectionSet>
+  --
+  -- {
+  --   kind = 'selectionSet',
+  --   selections = list of <selection>,
+  -- }
+  --
+  -- <selection> is one of the following:
+  --
+  -- * <field>
+  -- * <fragmentSpread>
+  -- * <inlineFragment>
   selectionSet = {
     children = function(node)
       return node.selections
@@ -71,6 +146,26 @@ local visitors = {
     rules = { rules.unambiguousSelections },
   },
 
+  -- <field>
+  --
+  -- {
+  --   kind = 'field',
+  --   alias = <alias> (optional),
+  --   name = {
+  --     kind = 'name',
+  --     value = '...',
+  --   },
+  --   arguments = list of <argument> (optional),
+  --   directives = list of <directive> (optional),
+  --   selectionSet = <selectionSet> (optional),
+  -- }
+  --
+  -- <alias>
+  --
+  -- {
+  --   kind = 'alias',
+  --   name = '...',
+  -- }
   field = {
     enter = function(node, context)
       local name = node.name.value
@@ -123,6 +218,14 @@ local visitors = {
     },
   },
 
+  -- <inlineFragment>
+  --
+  -- {
+  --   kind = 'inlineFragment',
+  --   selectionSet = <selectionSet>,
+  --   typeCondition = <namedType> (optional),
+  --   directives = list of <directive> (optional),
+  -- }
   inlineFragment = {
     enter = function(node, context)
       local kind = false
@@ -151,6 +254,16 @@ local visitors = {
     },
   },
 
+  -- <fragmentSpread>
+  --
+  -- {
+  --   kind = 'fragmentSpread',
+  --   name = {
+  --     kind = 'name',
+  --     value = '...',
+  --   },
+  --   directives = list of <directive> (optional),
+  -- }
   fragmentSpread = {
     enter = function(node, context)
       context.usedFragments[node.name.value] = true
@@ -216,6 +329,18 @@ local visitors = {
     },
   },
 
+  -- <fragmentDefinition>
+  --
+  -- {
+  --   kind = 'fragmentDefinition',
+  --   name = {
+  --     kind = 'name',
+  --     value = '...',
+  --   },
+  --   typeCondition = <namedType>,
+  --   directives = list of <directive> (optional),
+  --   selectionSet = <selectionSet>,
+  -- }
   fragmentDefinition = {
     enter = function(node, context)
       local kind = context.schema:getType(node.typeCondition.name.value) or false
@@ -243,6 +368,42 @@ local visitors = {
     },
   },
 
+  -- <argument>
+  --
+  -- {
+  --   kind = 'argument',
+  --   name = {
+  --     kind = 'name',
+  --     value = '...',
+  --   },
+  --   value = <value>,
+  -- }
+  --
+  -- <value> is one of the following:
+  --
+  -- * <variable>
+  -- * <inputObject>
+  -- * <list>
+  -- * <enum>
+  -- * <string>
+  -- * <boolean>
+  -- * <float>
+  -- * <int>
+  -- * <null>
+  --
+  -- <list>
+  --
+  -- {
+  --   kind = 'list',
+  --   values = list of <value>,
+  -- }
+  --
+  -- <enum>, <string>, <boolean>, <float>, <int>, <null>
+  --
+  -- {
+  --   kind = one of ('enum', 'string', 'boolean', 'float', 'int', 'null'),
+  --   value = '...',
+  -- }
   argument = {
     enter = function(node, context)
       if context.currentOperation then
@@ -269,6 +430,15 @@ local visitors = {
     rules = { rules.uniqueInputObjectFields },
   },
 
+  -- <inputObject>
+  --
+  -- {
+  --   kind = 'inputObject',
+  --   values = list of {
+  --     name = '...',
+  --     value = <value>,
+  --   },
+  -- }
   inputObject = {
     children = function(node)
       return util.map(node.values or {}, function(value)
@@ -285,12 +455,31 @@ local visitors = {
     end,
   },
 
+  -- <variable>
+  --
+  -- {
+  --   kind = 'variable',
+  --   name = {
+  --     kind = 'name',
+  --     value = '...',
+  --   },
+  -- }
   variable = {
     enter = function(node, context)
       context.variableReferences[node.name.value] = true
     end,
   },
 
+  -- <directive>
+  --
+  -- {
+  --   kind = 'directive',
+  --   name = {
+  --     kind = 'name',
+  --     value = <string>,
+  --   },
+  --   arguments = list of <argument> (optional),
+  -- }
   directive = {
     children = function(node, _)
       return node.arguments
