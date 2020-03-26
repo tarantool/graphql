@@ -3,6 +3,26 @@ local util = require(path .. '.util')
 
 local types = {}
 
+local function initFields(kind, fields)
+  assert(type(fields) == 'table', 'fields table must be provided')
+
+  local result = {}
+
+  for fieldName, field in pairs(fields) do
+    field = field.__type and { kind = field } or field
+    result[fieldName] = {
+      name = fieldName,
+      kind = field.kind,
+      description = field.description,
+      deprecationReason = field.deprecationReason,
+      arguments = field.arguments or {},
+      resolve = kind == 'Object' and field.resolve or nil
+    }
+  end
+
+  return result
+end
+
 function types.nonNull(kind)
   assert(kind, 'Must provide a type')
 
@@ -97,26 +117,6 @@ function types.interface(config)
   instance.nonNull = types.nonNull(instance)
 
   return instance
-end
-
-function initFields(kind, fields)
-  assert(type(fields) == 'table', 'fields table must be provided')
-
-  local result = {}
-
-  for fieldName, field in pairs(fields) do
-    field = field.__type and { kind = field } or field
-    result[fieldName] = {
-      name = fieldName,
-      kind = field.kind,
-      description = field.description,
-      deprecationReason = field.deprecationReason,
-      arguments = field.arguments or {},
-      resolve = kind == 'Object' and field.resolve or nil
-    }
-  end
-
-  return result
 end
 
 function types.enum(config)
