@@ -1129,3 +1129,29 @@ function g.test_validation_non_null_argument_error()
             end
     )
 end
+
+function g.test_both_data_and_error_result()
+    local query = [[
+        { test(arg: "A") }
+    ]]
+
+    local function callback(_, args)
+        return args[1].value, {message = 'Simple error'}
+    end
+
+    local query_schema = {
+        ['test'] = {
+            kind = types.string.nonNull,
+            arguments = {
+                arg = types.string.nonNull,
+                arg2 = types.string,
+                arg3 = types.int,
+                arg4 = types.long,
+            },
+            resolve = callback,
+        }
+    }
+    local data, errors = check_request(query, query_schema)
+    t.assert_equals(data, {test = 'A'})
+    t.assert_equals(errors,  {{message = 'Simple error'}})
+end
