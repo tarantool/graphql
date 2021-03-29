@@ -1131,12 +1131,13 @@ function g.test_validation_non_null_argument_error()
 end
 
 function g.test_both_data_and_error_result()
-    local query = [[
-        { test(arg: "A") }
-    ]]
+    local query = [[{
+        test_A: test(arg: "A")
+        test_B: test(arg: "B")
+    }]]
 
     local function callback(_, args)
-        return args[1].value, {message = 'Simple error'}
+        return args[1].value, {message = 'Simple error ' .. args[1].value}
     end
 
     local query_schema = {
@@ -1152,6 +1153,9 @@ function g.test_both_data_and_error_result()
         }
     }
     local data, errors = check_request(query, query_schema)
-    t.assert_equals(data, {test = 'A'})
-    t.assert_equals(errors,  {{message = 'Simple error'}})
+    t.assert_equals(data, {test_A = 'A', test_B = 'B'})
+    t.assert_equals(errors,  {
+        {message = 'Simple error A'},
+        {message = 'Simple error B'},
+    })
 end
