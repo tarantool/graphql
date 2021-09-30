@@ -8,7 +8,6 @@ __pycache__
 /dev
 /tmp/*
 !/tmp/.keep
-doc
 release
 release-doc
 .idea

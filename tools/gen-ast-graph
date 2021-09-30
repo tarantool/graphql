@@ -1,0 +1,124 @@
+#!/usr/bin/env python
+
+import os
+import re
+import sys
+
+
+def comment_lines(f, end_block_marker):
+    document_node_found = False
+    in_comment = False
+
+    for lineno, line in enumerate(f, 1):
+        raw_line = line
+
+        line = line.strip()
+        if not line.startswith('--'):
+            if in_comment:
+                in_comment = False
+                if document_node_found:
+                    yield end_block_marker, None, lineno
+            continue
+
+        in_comment = True
+        m1 = re.fullmatch(r'^--(?P<line>)$', line)
+        m2 = re.fullmatch(r'^-- (?P<line>.+)$', line)
+        m = m1 or m2
+        if not m:
+            raise RuntimeError('Bad comment line: {}'.format(repr(raw_line)))
+
+        line = m.group('line')
+
+        if not document_node_found and line == '<document>':
+            document_node_found = True
+
+        if not document_node_found:
+            continue
+
+        yield line, raw_line, lineno
+
+
+def generate_graph(f):
+    nodes = []
+    edges = []
+    merged_nodes = dict()
+
+    END_BLOCK_MARKER = None
+    in_node = False
+
+    for line, raw_line, lineno in comment_lines(f, END_BLOCK_MARKER):
+        if line is END_BLOCK_MARKER:
+            in_node = False
+            continue
+
+        if re.fullmatch(r'<[^>]+>', line):
+            nodes.append(dict(title=line, label=[line]))
+            in_node = True
+            continue
+
+        if re.fullmatch(r'(<[^>]+>, )+<[^>]+>', line):
+            nodes.append(dict(title=line, label=[line]))
+            for title in line.split(', '):
+                merged_nodes[title] = line
+            in_node = True
+            continue
+
+        union_re = r'(?P<title><[^>]+>) is one of the following:'
+        m = re.fullmatch(union_re, line)
+        if m:
+            nodes.append(dict(title=m.group('title'), label=[line]))
+            in_node = True
+            continue
+
+        if in_node:
+            nodes[-1]['label'].append(line)
+            for m in re.finditer(r'(?P<title><[^>]+>)', line):
+                edges.append((nodes[-1]['title'], m.group('title')))
+        else:
+            msg = '\n'.join([
+                'NOTICE: The following comment line is ignored, because',
+                '        it does not look as part of the AST description.',
+                '{:3} {}'])
+            print(msg.format(lineno, raw_line.rstrip()), file=sys.stderr)
+
+    # Resolve X -> Y into X -> merged_nodes[Y].
+    new_edges = []
+    for edge in edges:
+        x = edge[0]
+        y = merged_nodes.get(edge[1], edge[1])
+        new_edges.append((x, y))
+    edges = new_edges
+
+    return nodes, edges
+
+
+def normalize_node_title(title):
+    return re.sub(r'[<> ,]', '_', title)
+
+
+def print_dot_graph(nodes, edges):
+    print('digraph GraphQL_query_AST {')
+    print('node [shape=box];')
+
+    for node in nodes:
+        title = normalize_node_title(node['title'])
+        label = r'\l'.join(node['label'])
+        print(r'{} [label="{}\l"]'.format(title, label.rstrip(r'\l')))
+
+    for edge in edges:
+        x = normalize_node_title(edge[0])
+        y = normalize_node_title(edge[1])
+        print('{} -> {}'.format(x, y))
+
+    print('}')
+
+
+# Be immutable to a caller current working directory.
+script_file = os.path.realpath(__file__)
+script_dir = os.path.dirname(script_file)
+source_dir = os.path.dirname(script_dir)
+validate_lua = os.path.join(source_dir, 'graphql', 'validate.lua')
+
+with open(validate_lua, 'r') as f:
+    nodes, edges = generate_graph(f)
+print_dot_graph(nodes, edges)

@@ -108,6 +108,11 @@ tarantoolctl rocks install luatest 0.5.2
 .rocks/bin/luatest
 ```
 
+Hacking
+---
+
+[doc/hacking/README.md](doc/hacking/README.md)
+
 License
 ---
 
