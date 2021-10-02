@@ -146,7 +146,7 @@ function rules.unambiguousSelections(node, context)
 
       table.insert(selectionMap[key], entry)
     else
-      selectionMap[key] = { entry }
+      selectionMap[key] = { entry, }
     end
   end
 
@@ -314,7 +314,7 @@ function rules.fragmentSpreadIsPossible(node, context)
 
   local function getTypes(kind)
     if kind.__type == 'Object' then
-      return { [kind] = kind }
+      return { [kind] = kind, }
     elseif kind.__type == 'Interface' then
       return context.schema:getImplementors(kind.name)
     elseif kind.__type == 'Union' then
@@ -332,7 +332,6 @@ function rules.fragmentSpreadIsPossible(node, context)
   local fragmentTypes = getTypes(fragmentType)
 
   local valid = util.find(parentTypes, function(kind)
-    local kind = kind
     -- Here is the check that type, mentioned in '... on some_type'
     -- conditional fragment expression is type of some field of parent object.
     -- In case of Union parent object and NonNull wrapped inner types

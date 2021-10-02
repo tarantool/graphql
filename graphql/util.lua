@@ -11,6 +11,16 @@ local function map(t, fn)
   return res
 end
 
+local function map_name(t, fn)
+  local res = {}
+  for _, v in ipairs(t or {}) do
+    if v.name then
+      res[v.name] = fn(v, v.name)
+    end
+  end
+  return res
+end
+
 local function find(t, fn)
   for k, v in pairs(t) do
     if fn(v, k) then return v end
@@ -169,17 +179,17 @@ local function coerceValue(node, schemaType, variables, opts)
   end
 end
 
---- Check whether passed value has one of listed types.
----
---- @param obj value to check
----
---- @tparam string obj_name name of the value to form an error
----
---- @tparam string type_1
---- @tparam[opt] string type_2
---- @tparam[opt] string type_3
----
---- @return nothing
+-- Check whether passed value has one of listed types.
+--
+-- @param obj value to check
+--
+-- @tparam string obj_name name of the value to form an error
+--
+-- @tparam string type_1
+-- @tparam[opt] string type_2
+-- @tparam[opt] string type_3
+--
+-- @return nothing
 local function check(obj, obj_name, type_1, type_2, type_3)
     if type(obj) == type_1 or type(obj) == type_2 or type(obj) == type_3 then
         return
@@ -196,15 +206,15 @@ local function check(obj, obj_name, type_1, type_2, type_3)
     end
 end
 
---- Check whether table is an array.
----
---- Based on [that][1] implementation.
---- [1]: https://github.com/mpx/lua-cjson/blob/db122676/lua/cjson/util.lua
----
---- @tparam table table to check
---- @return[1] `true` if passed table is an array (includes the empty table
---- case)
---- @return[2] `false` otherwise
+-- Check whether table is an array.
+--
+-- Based on [that][1] implementation.
+-- [1]: https://github.com/mpx/lua-cjson/blob/db122676/lua/cjson/util.lua
+--
+-- @tparam table table to check
+-- @return[1] `true` if passed table is an array (includes the empty table
+-- case)
+-- @return[2] `false` otherwise
 local function is_array(table)
     if type(table) ~= 'table' then
         return false
@@ -270,6 +280,7 @@ end
 
 return {
   map = map,
+  map_name = map_name,
   find = find,
   filter = filter,
   values = values,

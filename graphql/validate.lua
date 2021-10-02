@@ -31,7 +31,7 @@ local visitors = {
       return node.definitions
     end,
 
-    rules = { rules.uniqueFragmentNames, exit = { rules.noUnusedFragments } }
+    rules = { rules.uniqueFragmentNames, exit = { rules.noUnusedFragments, }, },
   },
 
   operation = {
@@ -69,7 +69,7 @@ local visitors = {
       return node.selections
     end,
 
-    rules = { rules.unambiguousSelections, }
+    rules = { rules.unambiguousSelections, },
   },
 
   field = {
@@ -121,7 +121,7 @@ local visitors = {
       rules.requiredArgumentsPresent,
       rules.directivesAreDefined,
       rules.variableUsageAllowed,
-    }
+    },
   },
 
   inlineFragment = {
@@ -149,7 +149,7 @@ local visitors = {
       rules.fragmentHasValidType,
       rules.fragmentSpreadIsPossible,
       rules.directivesAreDefined,
-    }
+    },
   },
 
   fragmentSpread = {
@@ -214,7 +214,7 @@ local visitors = {
       rules.fragmentSpreadIsPossible,
       rules.directivesAreDefined,
       rules.variableUsageAllowed,
-    }
+    },
   },
 
   fragmentDefinition = {
@@ -241,7 +241,7 @@ local visitors = {
       rules.fragmentHasValidType,
       rules.fragmentDefinitionHasNoCycles,
       rules.directivesAreDefined,
-    }
+    },
   },
 
   argument = {
@@ -267,7 +267,7 @@ local visitors = {
       end)
     end,
 
-    rules = { rules.uniqueInputObjectFields, }
+    rules = { rules.uniqueInputObjectFields, },
   },
 
   inputObject = {
@@ -277,7 +277,7 @@ local visitors = {
       end)
     end,
 
-    rules = { rules.uniqueInputObjectFields, }
+    rules = { rules.uniqueInputObjectFields, },
   },
 
   list = {

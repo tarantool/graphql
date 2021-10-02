@@ -1,10 +1,11 @@
 local t = require('luatest')
-local g = t.group()
+local g = t.group('unit')
 
 local parse = require('graphql.parse').parse
 local types = require('graphql.types')
 local schema = require('graphql.schema')
 local validate = require('graphql.validate').validate
+local util = require('graphql.util')
 
 function g.test_parse_comments()
     t.assert_error(parse('{a(b:"#")}').definitions, {})
@@ -1056,4 +1057,35 @@ function g.test_boolean_coerce()
             validate, test_schema, parse([[ { test_boolean(value: 123) } ]]))
     t.assert_error_msg_contains('Could not coerce value "value" with type "string" to type boolean',
             validate, test_schema, parse([[ { test_boolean(value: "value") } ]]))
+end
+
+function g.test_util_map_name()
+    local res = util.map_name(nil, nil)
+    t.assert_items_equals(res, {})
+    res = util.map_name({ { name = 'a' }, { name = 'b' }, }, function(v) return v end)
+    t.assert_items_equals(res, {a = {name = 'a'}, b = {name = 'b'}})
+end
+
+function g.test_util_filter()
+    local res = util.filter({ { name = 'a' }, { name = 'b' }, }, function(v) return v.name == 'a' end)
+    t.assert_items_equals(res, {{name = 'a'}})
+end
+
+function g.test_util_values()
+    local res = util.values({ a = { name = 'a' }, b = { name = 'b' }, })
+    t.assert_items_equals(res, {{name = "a"}, {name = "b"}})
+end
+
+function g.test_util_cmpdeeply()
+    t.assert_equals(util.cmpdeeply({{{ a = 1}}}, {{{ a = 1}}}), true)
+    t.assert_equals(util.cmpdeeply({ a = { a = 1 }}, { a = { a = 2 }}), false)
+    t.assert_equals(util.cmpdeeply({ a = 1 }, { a = 1, b = { b = 3 }}), false)
+    t.assert_equals(util.cmpdeeply({{{ a = tonumber('nan')}}}, {{{ a = tonumber('nan')}}}), true)
+    t.assert_equals(util.cmpdeeply('nan', {{{ a = tonumber('nan')}}}), false)
+end
+
+function g.test_util_check()
+    t.assert_equals(select(2, pcall(util.check, 'a', 'a', nil)), 'a must be a nil, got string')
+    t.assert_equals(select(2, pcall(util.check, 'a', 'a', nil, 1)), 'a must be a nil or a 1, got string')
+    t.assert_equals(select(2, pcall(util.check, 'a', 'a', 3, 2, 1)), 'a must be a 3 or a 2r a 1, got string')
 end
