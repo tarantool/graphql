@@ -260,6 +260,7 @@ local function getFieldEntry(objectType, object, fields, context)
 
   local arguments = util.map(fieldType.arguments or {}, function(argument, name)
     local supplied = argumentMap[name] and argumentMap[name].value
+    if argument.kind then argument = argument.kind end
     return util.coerceValue(supplied, argument, context.variables, {
       strict_non_null = true,
       defaultValues = defaultValues,

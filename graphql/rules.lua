@@ -515,6 +515,7 @@ local function isVariableTypesValid(argument, argumentType, context,
     if hasDefault and variableType.__type ~= 'NonNull' then
       variableType = types.nonNull(variableType)
     end
+    if argumentType.kind then argumentType = argumentType.kind end
 
     if not isTypeSubTypeOf(variableType, argumentType, context) then
       return false, ('Variable "%s" type mismatch: the variable type "%s" ' ..

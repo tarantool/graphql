@@ -1377,3 +1377,85 @@ function g.test_specifiedByUrl()
     )
     t.assert_equals(errors, nil)
 end
+
+function g.test_descriptions()
+    local function callback(_, _)
+        return nil
+    end
+
+    local query_schema = {
+        ['test_query'] = {
+            kind = types.string.nonNull,
+            arguments = {
+                arg = types.string,
+                arg_described = {
+                    kind = types.object({
+                        name = 'test_object',
+                        fields = {
+                            object_arg_described = {
+                                kind = types.string,
+                                description = 'object argument'
+                            },
+                            object_arg = types.string,
+                        },
+                        kind = types.string,
+                    }),
+                    description = 'described query argument',
+                }
+            },
+            resolve = callback,
+            description = 'test query',
+        }
+    }
+
+    local mutation_schema = {
+        ['test_mutation'] = {
+            kind = types.string.nonNull,
+            arguments = {
+                mutation_arg = types.string,
+                mutation_arg_described = {
+                    kind = types.inputObject({
+                        name = 'test_input_object',
+                        fields = {
+                            input_object_arg_described = {
+                                kind = types.string,
+                                description = 'input object argument'
+                            },
+                            input_object_arg = types.string,
+                        },
+                        kind = types.string,
+                    }),
+                    description = 'described mutation argument',
+                },
+            },
+            resolve = callback,
+            description = 'test mutation',
+        }
+    }
+
+    local data, errors = check_request(introspection.query, query_schema, mutation_schema)
+    t.assert_equals(errors, nil)
+
+    local test_query = util.map_name(data.__schema.types, function(v) return v end)['Query'].fields
+    t.assert_equals(test_query[1].description, 'test query')
+
+    local arg_described = util.map_name(test_query[1].args, function(v) return v end)['arg_described']
+    t.assert_equals(arg_described.description, 'described query argument')
+
+    local test_object = util.map_name(data.__schema.types, function(v) return v end)['test_object']
+    local object_arg_described =
+        util.map_name(test_object.fields, function(v) return v end)['object_arg_described']
+    t.assert_equals(object_arg_described.description, 'object argument')
+
+    local test_mutation = util.map_name(data.__schema.types, function(v) return v end)['Mutation'].fields
+    t.assert_equals(test_mutation[1].description, 'test mutation')
+
+    local mutation_arg_described =
+        util.map_name(test_mutation[1].args, function(v) return v end)['mutation_arg_described']
+    t.assert_equals(mutation_arg_described.description, 'described mutation argument')
+
+    local test_input_object = util.map_name(data.__schema.types, function(v) return v end)['test_input_object']
+    local input_object_arg_described =
+        util.map_name(test_input_object.inputFields, function(v) return v end)['input_object_arg_described']
+    t.assert_equals(input_object_arg_described.description, 'input object argument')
+end
