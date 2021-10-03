@@ -21,7 +21,8 @@ function schema.create(config, name)
 
   self.directives = self.directives or {
     types.include,
-    types.skip
+    types.skip,
+    types.specifiedByUrl,
   }
 
   self.typeMap = {}

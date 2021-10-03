@@ -4,6 +4,7 @@ local schema = require('graphql.schema')
 local parse = require('graphql.parse')
 local validate = require('graphql.validate')
 local execute = require('graphql.execute')
+local util = require('graphql.util')
 local introspection = require('test.integration.introspection')
 
 local t = require('luatest')
@@ -1335,5 +1336,41 @@ function g.test_custom_directives()
             test_B = "{\"custom\":{\"arg\":\"echo\"}}"
         }
     })
+    t.assert_equals(errors, nil)
+end
+
+function g.test_specifiedByUrl()
+    local function callback(_, _)
+        return nil
+    end
+
+    local custom_scalar = types.scalar({
+        name = 'CustomInt',
+        description = "The `CustomInt` scalar type represents non-fractional signed whole numeric values. " ..
+                      "Int can represent values from -(2^31) to 2^31 - 1, inclusive.",
+        serialize = function(value)
+            return value
+        end,
+        parseLiteral = function(node)
+            return node.value
+        end,
+        isValueOfTheType = function(_)
+            return true
+        end,
+        specifiedByUrl = 'http://localhost',
+    })
+
+    local query_schema = {
+        ['test'] = {
+            kind = types.string.nonNull,
+            arguments = {
+                arg = custom_scalar,
+            },
+            resolve = callback,
+        }
+    }
+
+    local data, errors = check_request(introspection.query, query_schema)
+    t.assert_equals(tostring(util.map_name(data.__schema.types, function(v) return v end)['CustomInt'].specifiedByUrl), 'http://localhost')
     t.assert_equals(errors, nil)
 end
