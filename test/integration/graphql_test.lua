@@ -1371,6 +1371,9 @@ function g.test_specifiedByUrl()
     }
 
     local data, errors = check_request(introspection.query, query_schema)
-    t.assert_equals(tostring(util.map_name(data.__schema.types, function(v) return v end)['CustomInt'].specifiedByUrl), 'http://localhost')
+    t.assert_equals(
+        tostring(util.map_name(data.__schema.types, function(v) return v end)['CustomInt'].specifiedByUrl),
+        'http://localhost'
+    )
     t.assert_equals(errors, nil)
 end
