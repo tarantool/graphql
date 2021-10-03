@@ -286,6 +286,34 @@ local function getFieldEntry(objectType, object, fields, context)
 
   arguments = setmetatable(arguments, {__index=positions})
 
+  local directiveMap = {}
+  for _, directive in ipairs(firstField.directives or {}) do
+    directiveMap[directive.name.value] = directive
+  end
+
+  local directives = {}
+
+  if next(directiveMap) then
+    util.map_name(context.schema.directives or {}, function(directive, directive_name)
+      local supplied_directive = directiveMap[directive_name]
+      if supplied_directive ~= nil then
+        local directiveArgumentMap = {}
+        for _, argument in ipairs(supplied_directive.arguments or {}) do
+          directiveArgumentMap[argument.name.value] = argument
+        end
+
+        directives[directive_name] = util.map(directive.arguments or {}, function(argument, name)
+          local supplied = directiveArgumentMap[name] and directiveArgumentMap[name].value
+          if argument.kind then argument = argument.kind end
+          return util.coerceValue(supplied, argument, context.variables, {
+            strict_non_null = true,
+            defaultValues = defaultValues,
+          })
+        end)
+      end
+    end)
+  end
+
   local info = {
     context = context,
     fieldName = fieldName,
@@ -298,6 +326,7 @@ local function getFieldEntry(objectType, object, fields, context)
     operation = context.operation,
     variableValues = context.variables,
     defaultValues = context.defaultValues,
+    directives = directives,
   }
 
   local resolvedObject, err = (fieldType.resolve or defaultResolver)(object, arguments, info)
