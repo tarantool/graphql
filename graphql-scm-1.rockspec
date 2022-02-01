@@ -30,5 +30,6 @@ build = {
     ['graphql.util'] = 'graphql/util.lua',
     ['graphql.validate'] = 'graphql/validate.lua',
     ['graphql.validate_variables'] = 'graphql/validate_variables.lua',
+    ['graphql.init'] = 'graphql/init.lua',
   }
 }
