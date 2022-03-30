@@ -2051,3 +2051,83 @@ g.test_propagate_defaults_to_callback = function()
     t.assert_equals(errors, nil)
     t.assert_items_equals(json.decode(data.prefix.test_mutation), result)
 end
+
+function g.test_float_variables()
+    local query_variable = [[
+        query ($arg: Float) { test(arg: $arg) }
+    ]]
+
+    local floats_positive = {
+        '9007199254740991',
+        '-9007199254740992',
+        '0',
+        '9007199254740991.1',
+        '-9007199254740992.1',
+        '99999999999999',
+        '100000000000000',
+        '-99999999999999',
+        '-100000000000000',
+        '1e1',
+        '-1e1',
+    }
+
+    local floats_negative = {
+        '9007199254740992',
+        '-9007199254740993',
+        'nan',
+        'inf',
+        '-inf',
+    }
+
+    local function callback(_, args)
+        return args[1].value
+    end
+
+    local query_schema = {
+        ['test'] = {
+            kind = types.float,
+            arguments = {
+                arg = types.float,
+            },
+            resolve = callback,
+        }
+    }
+
+    local query_argument = function(value)
+        return '{ test(arg: '..value..' ) }'
+    end
+
+    -- Positive tests
+    for  _, value in ipairs(floats_positive) do
+        t.assert_items_equals(
+            check_request(
+                query_variable,
+                query_schema,
+                nil,
+                nil,
+                {variables = json.decode('{"arg": '.. value .. '}')}
+            ),
+            {test = tonumber(value)}
+        )
+        t.assert_items_equals(
+            check_request(query_argument(value), query_schema),
+            {test = tonumber(value)}
+        )
+    end
+
+    -- Negative tests
+    for _, value in ipairs(floats_negative) do
+        t.assert_error_msg_equals(
+            'Wrong variable \"arg\" for the Scalar \"Float\"',
+            function()
+                check_request(
+                    query_variable,
+                    query_schema,
+                    nil,
+                    nil,
+                    {variables = json.decode('{"arg": '.. value .. '}')}
+                )
+            end
+        )
+    end
+end

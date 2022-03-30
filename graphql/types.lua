@@ -318,7 +318,24 @@ types.long = types.scalar({
 })
 
 local function isFloat(value)
-  return type(value) == 'number'
+  -- According to http://spec.graphql.org/October2021/#sec-Float
+  -- Non-finite floating-point internal values (NaN and Infinity)
+  -- cannot be coerced to Float and must raise a field error.
+  if type(value) == 'number' then
+    if value == value and value ~= tonumber('Inf') and value ~= tonumber('-Inf') then
+      return true
+    else
+      return false
+    end
+  end
+
+  if ffi.istype('int64_t', value) then
+    return value >= -2^53 and value < 2^53
+  elseif ffi.istype('uint64_t', value) then
+    return value < 2^53
+  end
+
+  return false
 end
 
 local function coerceFloat(value)
