@@ -1090,5 +1090,8 @@ function g.test_util_find_by_name()
 end
 
 g.test_version = function()
-    t.assert_equals(require('graphql').VERSION, 'scm-1')
+    local handle = io.popen('git describe --tags --always')
+    local version = handle:read("*a"):gsub('\n*', '')
+    handle:close()
+    t.assert_equals(require('graphql').VERSION, version)
 end

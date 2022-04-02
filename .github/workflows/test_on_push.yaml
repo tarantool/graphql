@@ -21,10 +21,17 @@ jobs:
           tarantool-version: ${{ matrix.tarantool-version }}
 
       - name: Install dependencies
-        run: make .rocks
+        shell: bash
+        run: ./deps.sh
+
+      - name: Build
+        run: tarantoolctl rocks make
 
       - name: Run linter
-        run: make lint
+        run: .rocks/bin/luacheck .
 
       - name: Run tests
-        run: make test
+        run: |
+          rm -f tmp/luacov*
+          .rocks/bin/luatest --verbose --coverage --shuffle group
+          .rocks/bin/luacov . && grep -A999 '^Summary' tmp/luacov.report.out
