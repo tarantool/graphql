@@ -176,7 +176,7 @@ local function completeValue(fieldType, result, subSelections, context, opts)
     local innerType = fieldType.ofType
     local completedResult = completeValue(innerType, result, subSelections, context, opts)
 
-    if completedResult == nil then
+    if type(completedResult) == 'nil' then
       local err = string.format(
         'No value provided for non-null %s %q',
         (innerType.name or innerType.__type),
@@ -193,7 +193,7 @@ local function completeValue(fieldType, result, subSelections, context, opts)
   end
 
   if result == nil then
-    return nil
+      return result
   end
 
   if fieldTypeName == 'List' then
