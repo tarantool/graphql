@@ -14,7 +14,7 @@ description = {
 
 dependencies = {
   'lua >= 5.1',
-  'luagraphqlparser == 0.2.0-1',
+  'luagraphqlparser == 0.2.1-1',
 }
 
 build = {
