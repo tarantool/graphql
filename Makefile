@@ -2,10 +2,10 @@ SHELL := /bin/bash
 
 .PHONY: .rocks
 .rocks: graphql-scm-1.rockspec Makefile
-		tarantoolctl rocks make
-		tarantoolctl rocks install luatest 0.5.7
-		tarantoolctl rocks install luacov 0.13.0
-		tarantoolctl rocks install luacheck 0.26.0
+		tt rocks make
+		tt rocks install luatest 0.5.7
+		tt rocks install luacov 0.13.0
+		tt rocks install luacheck 0.26.0
 
 .PHONY: lint
 lint:
@@ -26,4 +26,4 @@ clean:
 .PHONY: build
 build:	
 		if [ ! -d ".rocks" ]; then make .rocks; fi
-		tarantoolctl rocks pack graphql scm-1	
+		tt rocks pack graphql scm-1	
